@@ -1,8 +1,12 @@
 import {
+  initializeAuth,
   AuthErrorCodes,
-  getAuth,
+  createUserWithEmailAndPassword,
+  getReactNativePersistence,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initFirebase } from '../api/firebase';
 
 export const getAuthErrorMessages = (errorCode) => {
   switch (errorCode) {
@@ -12,12 +16,27 @@ export const getAuthErrorMessages = (errorCode) => {
       return '유효하지 않은 이메일 주소입니다.';
     case AuthErrorCodes.INVALID_PASSWORD:
       return '잘못된 비밀번호입니다.';
+    case AuthErrorCodes.EMAIL_EXISTS:
+      return '이미 가입된 이메일입니다.';
+    case AuthErrorCodes.WEAK_PASSWORD:
+      return '비밀번호는 최소 6자리입니다.';
     default:
       return '로그인에 실패했습니다.';
   }
 };
 
+const app = initFirebase();
+
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
+
 export const signIn = async ({ email, password }) => {
-  const { user } = await signInWithEmailAndPassword(getAuth(), email, password);
+  const { user } = await signInWithEmailAndPassword(auth, email, password);
+  return user;
+};
+
+export const signUp = async ({ email, password }) => {
+  const { user } = await createUserWithEmailAndPassword(auth, email, password);
   return user;
 };

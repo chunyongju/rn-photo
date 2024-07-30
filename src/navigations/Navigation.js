@@ -3,9 +3,15 @@ import AuthStack from './AuthStack';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { Asset } from 'expo-asset';
-import { initFirebase } from '../api/firebase';
 import { useUserState } from '../contexts/UserContext';
 import MainStack from './MainStack';
+
+const ImageAssets = [
+  require('../../assets/cover.png'),
+  require('../../assets/home-clock.png'),
+  require('../../assets/home-map.png'),
+  require('../../assets/icon.png'),
+];
 
 const Navigation = () => {
   const [user] = useUserState();
@@ -15,11 +21,10 @@ const Navigation = () => {
     (async () => {
       try {
         await SplashScreen.preventAutoHideAsync();
-        await Asset.fromModule(
-          require('../../assets/cover.png')
-        ).downloadAsync();
 
-        const app = initFirebase();
+        await Promise.all(
+          ImageAssets.map((image) => Asset.fromModule(image).downloadAsync())
+        );
       } catch (e) {
         console.log(e);
       } finally {
@@ -37,7 +42,7 @@ const Navigation = () => {
   if (!isReady) {
     return null;
   }
-
+  //console.log(user.uid);
   return (
     <NavigationContainer onReady={onReady}>
       {user.uid ? <MainStack /> : <AuthStack />}

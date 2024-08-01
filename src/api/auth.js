@@ -4,6 +4,8 @@ import {
   createUserWithEmailAndPassword,
   getReactNativePersistence,
   signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initFirebase } from '../api/firebase';
@@ -36,7 +38,28 @@ export const signIn = async ({ email, password }) => {
   return user;
 };
 
+const PHOTO_URL =
+  'https://firebasestorage.googleapis.com/v0/b/rn-photo-3da3f.appspot.com/o/profile.png?alt=media';
+
 export const signUp = async ({ email, password }) => {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
+
+  await updateUserInfo({
+    displayName: email.split('@')[0].slice(0, 10),
+    photoURL: PHOTO_URL,
+  });
+
   return user;
+};
+
+export const logout = async () => {
+  await signOut(auth);
+};
+
+export const updateUserInfo = async (userInfo) => {
+  try {
+    await updateProfile(auth.currentUser, userInfo);
+  } catch (e) {
+    throw new Error('사용자 정보 수정에 실패했습니다.');
+  }
 };

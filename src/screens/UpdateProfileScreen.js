@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   Alert,
   Keyboard,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInput,
   View,
+  Platform,
 } from 'react-native';
 import { GRAY, WHITE } from '../colors';
 import FastImage from '../components/FastImage';
@@ -15,15 +16,29 @@ import SafeInputView from '../components/SafeInputView';
 import { useLayoutEffect, useEffect, useState, useCallback } from 'react';
 import HeaderRight from '../components/HeaderRight';
 import { updateUserInfo } from '../api/auth';
+import { MainRoutes } from '../navigations/routes';
+import { getLocalUri } from '../components/ImagePicker';
+import { uploadPhoto } from '../api/storage';
 
 const UpdateProfileScreen = () => {
   const navigation = useNavigation();
+  const { params } = useRoute();
 
   const [user, setUser] = useUserState();
 
+  const [photo, setPhoto] = useState({ uri: user.photoURL });
   const [displayName, setDisplayName] = useState(user.displayName);
   const [disabled, setDisabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (params) {
+      const { selectedPhotos } = params;
+      if (selectedPhotos?.length) {
+        setPhoto(selectedPhotos[0]);
+      }
+    }
+  }, [params]);
 
   useEffect(() => {
     setDisabled(!displayName || isLoading);
@@ -34,7 +49,16 @@ const UpdateProfileScreen = () => {
     if (!disabled) {
       setIsLoading(true);
       try {
-        const userInfo = { displayName };
+        const localUri = Platform.select({
+          ios: await getLocalUri(photo.id),
+          android: photo.uri,
+        });
+        const photoURL = await uploadPhoto({
+          uri: localUri,
+          uid: user.uid,
+        });
+
+        const userInfo = { displayName, photoURL };
 
         await updateUserInfo(userInfo);
         setUser((prev) => ({ ...prev, ...userInfo }));
@@ -45,7 +69,15 @@ const UpdateProfileScreen = () => {
         setIsLoading(false);
       }
     }
-  }, [disabled, displayName, navigation, setUser]);
+  }, [
+    disabled,
+    displayName,
+    navigation,
+    setUser,
+    photo.id,
+    photo.uri,
+    user.uid,
+  ]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -62,8 +94,11 @@ const UpdateProfileScreen = () => {
             user.photoURL || { backgroundColor: GRAY.DEFAULT },
           ]}
         >
-          <FastImage source={{ uri: user.photoURL }} style={styles.photo} />
-          <Pressable style={styles.imageButton} onPress={() => {}}>
+          <FastImage source={{ uri: photo.uri }} style={styles.photo} />
+          <Pressable
+            style={styles.imageButton}
+            onPress={() => navigation.navigate(MainRoutes.IMAGE_PICKER)}
+          >
             <MaterialCommunityIcons name="image" size={20} color={WHITE} />
           </Pressable>
         </View>

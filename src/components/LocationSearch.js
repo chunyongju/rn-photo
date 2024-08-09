@@ -4,47 +4,61 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GRAY, PRIMARY } from '../colors';
 import { MAP_KEY } from '../../env';
 import PropTypes from 'prop-types';
+import { forwardRef } from 'react';
 
-const LocationSearch = ({
-  styles,
-  onPress,
-  isLoading = false,
-  isSelected = false,
-}) => {
-  return (
-    <View style={[defaultStyles.container, styles?.container]}>
-      <GooglePlacesAutocomplete
-        placeholder="Location"
-        styles={{
-          container: { flex: 0 },
-          textInput: { paddingLeft: 30 },
-        }}
-        onPress={onPress}
-        onFail={(e) => {
-          console.log('GooglePlacesAutocomplete onFail : ', e);
-        }}
-        query={{ key: MAP_KEY, language: 'ko' }}
-        debounce={400}
-        enablePoweredByContainer={false}
-        textInputProps={{ editable: !isLoading }}
-      />
-
-      <View style={[defaultStyles.icon, styles?.icon]}>
-        <MaterialCommunityIcons
-          name="map-marker"
-          size={20}
-          color={isSelected ? PRIMARY.DEFAULT : GRAY.LIGHT}
+const LocationSearch = forwardRef(
+  (
+    {
+      styles,
+      onPress,
+      isLoading = false,
+      isSelected = false,
+      iconVisible = true,
+    },
+    ref
+  ) => {
+    return (
+      <View style={[defaultStyles.container, styles?.container]}>
+        <GooglePlacesAutocomplete
+          ref={ref}
+          placeholder="Location"
+          styles={{
+            container: { flex: 0 },
+            textInput: { paddingLeft: iconVisible ? 30 : 10 },
+          }}
+          onPress={onPress}
+          onFail={(e) => {
+            console.log('GooglePlacesAutocomplete onFail : ', e);
+          }}
+          query={{ key: MAP_KEY, language: 'ko' }}
+          debounce={400}
+          enablePoweredByContainer={false}
+          textInputProps={{ editable: !isLoading }}
+          fetchDetails={true}
         />
+
+        {iconVisible && (
+          <View style={[defaultStyles.icon, styles?.icon]}>
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={20}
+              color={isSelected ? PRIMARY.DEFAULT : GRAY.LIGHT}
+            />
+          </View>
+        )}
       </View>
-    </View>
-  );
-};
+    );
+  }
+);
+
+LocationSearch.displayName = 'LocationSearch';
 
 LocationSearch.propTypes = {
   styles: PropTypes.object,
   onPress: PropTypes.func.isRequired,
   isLoading: PropTypes.bool,
   isSelected: PropTypes.bool,
+  iconVisible: PropTypes.bool,
 };
 
 const defaultStyles = StyleSheet.create({

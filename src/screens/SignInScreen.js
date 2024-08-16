@@ -46,7 +46,7 @@ const SignInScreen = () => {
     const disabled = !newForm.email || !newForm.password;
 
     dispatch({
-      type: AuthFormTypes.UPDATE_FROM,
+      type: AuthFormTypes.UPDATE_FORM,
       payload: { disabled, ...payload },
     });
   };
@@ -68,7 +68,6 @@ const SignInScreen = () => {
           },
         ]);
       }
-      dispatch({ type: AuthFormTypes.TOGGLE_LOADING });
     }
   };
 
